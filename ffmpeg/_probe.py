@@ -1,7 +1,8 @@
 import json
 import subprocess
+import os
 from ._run import Error
-from ._utils import convert_kwargs_to_cmd_line_args
+from ._utils import convert_kwargs_to_cmd_line_args as kwargs_converter
 
 
 def probe(filename, cmd='ffprobe', timeout=None, **kwargs):
@@ -13,6 +14,8 @@ def probe(filename, cmd='ffprobe', timeout=None, **kwargs):
             The stderr output can be retrieved by accessing the
             ``stderr`` property of the exception.
     """
+    if not os.path.isfile(filename):
+        raise ValueError('File not found: {}'.format(filename))
     args = [cmd, '-show_format', '-show_streams', '-of', 'json']
     args += convert_kwargs_to_cmd_line_args(kwargs)
     args += [filename]

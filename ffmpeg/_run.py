@@ -51,6 +51,17 @@ def _get_input_args(input_node):
 
 
 def _format_input_stream_name(stream_name_map, edge, is_final_arg=False):
+    """
+    Formats the input stream name based on the provided edge and other parameters.
+
+    Args:
+        stream_name_map: a dictionary mapping (node, label) to stream name.
+        edge: the edge to be formatted.
+        is_final_arg: whether this is the final argument to be formatted.
+
+    Returns:
+        The formatted stream name.
+    """
     prefix = stream_name_map[edge.upstream_node, edge.upstream_label]
     if not edge.upstream_selector:
         suffix = ''
@@ -66,10 +77,31 @@ def _format_input_stream_name(stream_name_map, edge, is_final_arg=False):
 
 
 def _format_output_stream_name(stream_name_map, edge):
+    """
+    Formats the output stream name based on the provided edge.
+
+    Args:
+        stream_name_map: a dictionary mapping (node, label) to stream name.
+        edge: the edge to be formatted.7     Args:     
+
+    Returns:
+        The formatted stream name.
+    """
     return '[{}]'.format(stream_name_map[edge.upstream_node, edge.upstream_label])
 
 
 def _get_filter_spec(node, outgoing_edge_map, stream_name_map):
+    """
+    Gets the filter spec for the provided node.
+
+    Args:
+        node: the node to get the filter spec for.
+        outgoing_edge_map: the outgoing edge map for the node.
+        stream_name_map: a dictionary mapping (node, label) to stream name.
+
+    Returns:
+        The filter spec for the node.
+    """
     incoming_edges = node.incoming_edges
     outgoing_edges = get_outgoing_edges(node, outgoing_edge_map)
     inputs = [

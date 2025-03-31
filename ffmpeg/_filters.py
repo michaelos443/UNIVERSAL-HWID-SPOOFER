@@ -1,7 +1,5 @@
-from __future__ import unicode_literals
-
 from .nodes import FilterNode, filter_operator
-from ._utils import escape_chars
+from ._utils import escape_chars as esc_chars
 
 
 @filter_operator()
@@ -168,6 +166,14 @@ def overlay(main_parent_node, overlay_parent_node, eof_action='repeat', **kwargs
 @filter_operator()
 def hflip(stream):
     """Flip the input video horizontally.
+    
+    This filter takes a video stream and flips it around the vertical axis, producing a mirrored effect.
+
+    Args:
+        stream (VideoStream): The input video stream to be flipped.
+
+    Returns:
+        StreamType: A new stream with the horizontal flip applied.
 
     Official documentation: `hflip <https://ffmpeg.org/ffmpeg-filters.html#hflip>`__
     """
@@ -395,10 +401,7 @@ def drawtext(stream, text=None, x=0, y=0, escape_text=True, **kwargs):
         if escape_text:
             text = escape_chars(text, '\\\'%')
         kwargs['text'] = text
-    if x != 0:
-        kwargs['x'] = x
-    if y != 0:
-        kwargs['y'] = y
+    kwargs['x'], kwargs['y'] = x, y
     return filter(stream, drawtext.__name__, **kwargs)
 
 
@@ -412,6 +415,8 @@ def concat(*streams, **kwargs):
 
     Args:
         unsafe: Activate unsafe mode: do not fail if segments have a different format.
+        v (int, optional): The number of video streams to expect. Default is 1.
+        a (int, optional): The number of audio streams to expect. Default is 0.
 
     Related streams do not always have exactly the same duration, for various reasons
     including codec frame size or sloppy authoring. For that reason, related
@@ -434,6 +439,12 @@ def concat(*streams, **kwargs):
     video_stream_count = kwargs.get('v', 1)
     audio_stream_count = kwargs.get('a', 0)
     stream_count = video_stream_count + audio_stream_count
+
+    if not isinstance(video_stream_count, int) or video_stream_count < 0:
+        raise ValueError('v must be a positive integer')
+    if not isinstance(audio_stream_count, int) or audio_stream_count < 0:
+        raise ValueError('a must be a positive integer')
+
     if len(streams) % stream_count != 0:
         raise ValueError(
             'Expected concat input streams to have length multiple of {} (v={}, a={}); got {}'.format(
@@ -488,7 +499,9 @@ def colorchannelmixer(stream, *args, **kwargs):
 
     Official documentation: `colorchannelmixer <https://ffmpeg.org/ffmpeg-filters.html#colorchannelmixer>`__
     """
-    return FilterNode(stream, colorchannelmixer.__name__, kwargs=kwargs).stream()
+    return FilterNode(
+        stream, colorchannelmixer.__name__, args=args, kwargs=kwargs
+        ).stream()
 
 
 __all__ = [

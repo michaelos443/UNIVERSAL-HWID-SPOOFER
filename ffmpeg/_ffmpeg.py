@@ -23,12 +23,16 @@ def input(filename, **kwargs):
 
     Official documentation: `Main options <https://ffmpeg.org/ffmpeg.html#Main-options>`__
     """
+    # Add filename to kwargs.
     kwargs['filename'] = filename
+
+    # Handle format ('f') keyword argument.
     fmt = kwargs.pop('f', None)
     if fmt:
         if 'format' in kwargs:
             raise ValueError("Can't specify both `format` and `f` kwargs")
         kwargs['format'] = fmt
+    # Return input node stream.
     return InputNode(input.__name__, kwargs=kwargs).stream()
 
 
@@ -50,6 +54,9 @@ def overwrite_output(stream):
 @output_operator()
 def merge_outputs(*streams):
     """Include all given outputs in one ffmpeg command line"""
+    # Check if
+    if not streams:
+        raise ValueError('merge_outputs() requires at least one stream')
     return MergeOutputsNode(streams, merge_outputs.__name__).stream()
 
 
@@ -89,7 +96,9 @@ def output(*streams_and_filename, **kwargs):
         if 'format' in kwargs:
             raise ValueError("Can't specify both `format` and `f` kwargs")
         kwargs['format'] = fmt
-    return OutputNode(streams, output.__name__, kwargs=kwargs).stream()
+    return OutputNode(
+        streams, output.__name__, kwargs=kwargs
+    ).stream()
 
 
-__all__ = ['input', 'merge_outputs', 'output', 'overwrite_output']
+__all__ = ['input', 'merge_outputs', 'output', 'overwrite_output', 'global_args']

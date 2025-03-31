@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from ._utils import get_hash, get_hash_int
 from builtins import object
 from collections import namedtuple
@@ -52,22 +50,22 @@ class DagNode(object):
 
     def __hash__(self):
         """Return an integer hash of the node."""
-        raise NotImplementedError()
+        raise NotImplementedError("Subclasses must implement this")
 
     def __eq__(self, other):
         """Compare two nodes; implementations should return True if (and only if)
         hashes match.
         """
-        raise NotImplementedError()
+        raise NotImplementedError("Subclasses must implement this")
 
-    def __repr__(self, other):
+    def __repr__(self) -> str:
         """Return a full string representation of the node."""
-        raise NotImplementedError()
+        raise NotImplementedError("Subclasses must implement this")
 
     @property
     def short_repr(self):
         """Return a partial/concise representation of the node."""
-        raise NotImplementedError()
+        raise NotImplementedError("Subclasses must implement this")
 
     @property
     def incoming_edge_map(self):
@@ -77,7 +75,7 @@ class DagNode(object):
         ``(outgoing_node, outgoing_label)``.  Note that implicitly, ``incoming_node`` is
         ``self``.  See "Edges" section above.
         """
-        raise NotImplementedError()
+        raise NotImplementedError("Subclasses must implement this")
 
 
 DagEdge = namedtuple(
@@ -96,7 +94,7 @@ def get_incoming_edges(downstream_node, incoming_edge_map):
     edges = []
     for downstream_label, upstream_info in list(incoming_edge_map.items()):
         upstream_node, upstream_label, upstream_selector = upstream_info
-        edges += [
+        edges.append(
             DagEdge(
                 downstream_node,
                 downstream_label,
@@ -104,7 +102,7 @@ def get_incoming_edges(downstream_node, incoming_edge_map):
                 upstream_label,
                 upstream_selector,
             )
-        ]
+        )
     return edges
 
 
@@ -151,6 +149,8 @@ class KwargReprNode(DagNode):
 
     def __get_hash(self):
         hashes = self.__upstream_hashes + [self.__inner_hash]
+        if not all(isinstance(h, int) for h in hashes):
+            raise TypeError('Expected all hashes to be integers')
         return get_hash_int(hashes)
 
     def __init__(self, incoming_edge_map, name, args, kwargs):
@@ -170,7 +170,7 @@ class KwargReprNode(DagNode):
     def short_hash(self):
         return '{:x}'.format(abs(hash(self)))[:12]
 
-    def long_repr(self, include_hash=True):
+    def long_repr(self, include_hash=True) -> str:
         formatted_props = ['{!r}'.format(arg) for arg in self.args]
         formatted_props += [
             '{}={!r}'.format(key, self.kwargs[key]) for key in sorted(self.kwargs)

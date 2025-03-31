@@ -611,6 +611,12 @@ def test__merge_outputs():
     assert ffmpeg.get_args([out1, out2]) == ['-i', 'in.mp4', 'out2.mp4', 'out1.mp4']
 
 
+def test__merge_outputs__no_streams():
+    with pytest.raises(ValueError) as excinfo:
+        ffmpeg.merge_outputs()
+    assert str(excinfo.value) == 'merge_outputs() requires at least one stream'
+
+
 def test__input__start_time():
     assert ffmpeg.input('in', ss=10.5).output('out').get_args() == [
         '-ss',
@@ -669,6 +675,7 @@ def test_passthrough_selectors():
 
 
 def test_mixed_passthrough_selectors():
+    """Test that a filter with a selector is correctly passed to the output node."""
     i1 = ffmpeg.input(TEST_INPUT_FILE1)
     args = ffmpeg.output(i1['1'].hflip(), i1['2'], TEST_OUTPUT_FILE1).get_args()
     assert args == [

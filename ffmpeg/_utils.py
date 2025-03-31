@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 from builtins import str
-from past.builtins import basestring
+from past.builtins import basestring as base_str
 import hashlib
 import sys
 
@@ -55,7 +55,7 @@ def _recursive_repr(item):
     This is able to represent more things than json.dumps, since it does not require
     things to be JSON serializable (e.g. datetimes).
     """
-    if isinstance(item, basestring):
+    if isinstance(item, base_str):
         result = str(item)
     elif isinstance(item, list):
         result = '[{}]'.format(', '.join([_recursive_repr(x) for x in item]))
@@ -80,7 +80,30 @@ def get_hash_int(item):
 
 
 def escape_chars(text, chars):
-    """Helper function to escape uncomfortable characters."""
+    """
+    Helper function to escape uncomfortable characters.
+
+    This function takes a string and a set of characters that need to be escaped.
+    Any occurrence of these characters in the text will be replaced with the character 
+    prefixed by a backslash (e.g., 'a' becomes '\a').
+
+    Args:
+        text (str): The input text in which characters will be escaped.
+        chars (str): A string containing characters to be escaped.
+
+    Returns:
+        str: The modified text with specified characters escaped.
+
+    Example:
+        >>> escape_chars("Hello, World!", ",!")
+        'Hello\, World\!'
+        
+    Notes:
+        - The function first converts the input text to a string to ensure compatibility.
+        - The characters to be escaped are converted to a list of unique characters.
+        - The backslash itself is treated specially: if it is in the list of characters to escape,
+          it will be moved to the beginning of the list to prevent double escaping.
+    """
     text = str(text)
     chars = list(set(chars))
     if '\\' in chars:
@@ -92,17 +115,35 @@ def escape_chars(text, chars):
 
 
 def convert_kwargs_to_cmd_line_args(kwargs):
-    """Helper function to build command line arguments out of dict."""
+    """
+    Helper function to build command line arguments out of dict.
+
+    This function takes a dictionary of keyword arguments and converts it into a list of command line arguments.
+    The resulting list will contain the keys and values of the dictionary, prefixed with a hyphen (-).
+    If the value is a list, it will be expanded into multiple arguments, one for each element.
+    If the value is None, it will not be included in the output.
+
+    Args:
+        kwargs (dict): A dictionary of keyword arguments.
+
+    Returns:
+        list: A list of command line arguments, including the keys and values of the dictionary.
+
+    Example:
+        >>> convert_kwargs_to_cmd_line_args({'a': 1, 'b': [2, 3], 'c': None})
+        ['-a', '1', '-b', '2', '-b', '3']
+    """
     args = []
+    append = args.append
     for k in sorted(kwargs.keys()):
         v = kwargs[k]
         if isinstance(v, Iterable) and not isinstance(v, str):
             for value in v:
-                args.append('-{}'.format(k))
+                append('-{}'.format(k))
                 if value is not None:
-                    args.append('{}'.format(value))
+                    append(str(value))
             continue
-        args.append('-{}'.format(k))
+        append('-{}'.format(k))
         if v is not None:
-            args.append('{}'.format(v))
+            append(str(v))
     return args
